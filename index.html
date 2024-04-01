@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script
+			defer
+			src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+		></script>
+		<title>Grid Challenge</title>
+	</head>
+	<body>
+		<main x-data="grid" class="space-y-6 p-4 font-mono">
+			<h1 class="text-3xl font-semibold">Selectable Grid</h1>
+			<p class="text-gray-700">
+				<span class="italic"> challenge from: </span>
+				<a
+					class="text-green-600 underline"
+					href="https://www.youtube.com/watch?v=q4ONcehj8dM"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					https://www.youtube.com/watch?v=q4ONcehj8dM
+				</a>
+			</p>
+
+			<div class="flex flex-col space-y-2">
+				<label for="height"> Height </label>
+				<input
+					x-model="height"
+					type="number"
+					name="height"
+					id="height"
+					class="rounded border p-1"
+				/>
+				<label for="width"> Width </label>
+				<input
+					x-model="width"
+					type="number"
+					name="width"
+					id="width"
+					class="rounded border p-1"
+				/>
+			</div>
+
+			<div class="select-none">
+				<table>
+					<tbody>
+						<template x-for="row in rows" :key="row">
+							<tr>
+								<template x-for="col in cols" :key="col">
+									<td
+										x-on:mousedown="handleMouseDown(row, col)"
+										x-on:mouseover="handleMouseOver(row, col)"
+										x-on:mouseup="handleMouseUp(row, col)"
+										x-text="getColumnId(row, col)"
+										x-bind:class="isOnSelectedZone(row, col) ? 'bg-lime-600 text-white' : ''"
+										class="h-10 w-10 border text-center"
+									></td>
+								</template>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+
+			<script>
+				document.addEventListener('alpine:init', () => {
+					Alpine.data('grid', () => ({
+						height: '10',
+						width: '15',
+						get rows() {
+							return Array(parseInt(this.height))
+								.fill(0)
+								.map((_, i) => i + 1)
+						},
+						get cols() {
+							return Array(parseInt(this.width))
+								.fill(0)
+								.map((_, i) => i + 1)
+						},
+						start: [0, 0],
+						end: [0, 0],
+						isSelecting: false,
+						getColumnId(row, col) {
+							return (row - 1) * this.width + col
+						},
+						isOnSelectedZone(row, col) {
+							const [startX, startY] = this.start
+							const [endX, endY] = this.end
+							return (
+								startX <= col && col <= endX && startY <= row && row <= endY
+							)
+						},
+						handleMouseDown(row, col) {
+							this.start = [col, row]
+							this.end = [col, row]
+							this.isSelecting = true
+						},
+						handleMouseUp(row, col) {
+							const [startX, startY] = this.start
+							const [endX, endY] = this.end
+							if (startX === 0 && startY === 0) return
+							const [x1, x2] = this.lowerToGreater(startX, col, endX)
+							const [y1, y2] = this.lowerToGreater(startY, row, endY)
+							this.start = [x1, y1]
+							this.end = [x2, y2]
+							this.isSelecting = false
+						},
+						handleMouseOver(row, col) {
+							const [startX, startY] = this.start
+							const [endX, endY] = this.end
+							if (!this.isSelecting || (startX === 0 && startY === 0)) return
+							const [x1, x2] = this.lowerToGreater(startX, col, endX)
+							const [y1, y2] = this.lowerToGreater(startY, row, endY)
+							this.start = [x1, y1]
+							this.end = [x2, y2]
+						},
+						lowerToGreater(a, b, c) {
+							return [Math.min(a, b, c), Math.max(a, b, c)]
+						}
+					}))
+				})
+			</script>
+		</main>
+	</body>
+</html>
